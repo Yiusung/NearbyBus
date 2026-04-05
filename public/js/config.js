@@ -4,7 +4,7 @@
 
 const CONFIG = {
   // ── API Endpoints ─────────────────────────────
-  STOPS_URL:       '/api/stops',
+  STOPS_URL:       '/api/stops.json',
   ETA_PROXY:       '/api/eta',
 
   // ── Geo ──────────────────────────────────────
