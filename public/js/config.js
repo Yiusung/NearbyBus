@@ -8,7 +8,7 @@ const CONFIG = {
   ETA_PROXY:       '/api/eta',
 
   // ── Geo ──────────────────────────────────────
-  NEARBY_RADIUS:   150,              // meters — ETA cards
+  NEARBY_RADIUS:   200,              // meters — ETA cards
   MAP_RADIUS:      500,              // meters — map dots
 
   // At HK latitude (~22.3°N):
@@ -20,10 +20,10 @@ const CONFIG = {
   // ── ETA ──────────────────────────────────────
   MAX_ETA_ROUTES:  6,                // routes with full ETA display
   MAX_ETA_TIMES:   3,                // upcoming buses shown per route
-  ETA_REFRESH_MS:  15000,
+  ETA_REFRESH_MS:  60000,
 
   // ── Data Sync ────────────────────────────────
-  DATA_MAX_AGE_MS: 7 * 24 * 3600 * 1000,  // 7 days
+  DATA_MAX_AGE_MS: 30 * 24 * 3600 * 1000,  // 7 days
 
   // ── Stars ────────────────────────────────────
   MAX_STARRED:     5,
