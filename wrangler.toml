@@ -1,0 +1,7 @@
+name = "bus-eta"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# Serve the HTML page from /public
+[assets]
+directory = "./public"

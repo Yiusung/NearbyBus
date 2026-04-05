@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>巴士到站</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<!-- Dexie -->
+<script src="https://unpkg.com/dexie@3.2.7/dist/dexie.js"></script>
+
+<!-- App modules (loaded as classic scripts, order matters) -->
+<script src="/js/config.js"></script>
+<script src="/js/db.js"></script>
+<script src="/js/geo.js"></script>
+<script src="/js/eta.js"></script>
+<script src="/js/map.js"></script>
+<script src="/js/ui.js"></script>
+<script src="/js/stars.js"></script>
+
+<!-- Leaflet loaded after config is available -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Entry point — last -->
+<script src="/js/app.js"></script>
+
+<style>
+/* ═══════════════════════════════════════════════════
+   CSS — Light (Street Signage) + Dark (Neon) Themes
+   ═══════════════════════════════════════════════════ */
+
+:root {
+  --bg: #f0ece4;
+  --surface: #faf8f3;
+  --card: #ffffff;
+  --card-border: #d4cfc5;
+  --text: #1a1610;
+  --text-sec: #5a5347;
+  --text-muted: #8c8478;
+  --accent: #1a5cac;
+  --radius: 6px;
+  --font: 'Noto Sans TC', sans-serif;
+  --mono: 'DM Mono', monospace;
+
+  --kmb: #cc2233; --kmb-bg: #fdf0f0;
+  --ctb: #d4880a; --ctb-bg: #fdf6e8;
+  --nlb: #1a6b3c; --nlb-bg: #eef8f2;
+
+  --eta-hot: #cc2233; --eta-hot-bg: #fdf0f0;
+  --eta-warm: #d4880a; --eta-warm-bg: #fdf6e8;
+  --eta-cool: #5a5347;
+  --eta-dead: #8c8478;
+}
+
+[data-theme="dark"] {
+  --bg: #0a0a0f;
+  --surface: #101018;
+  --card: #12121c;
+  --card-border: #1e1e2e;
+  --text: #e8e4f0;
+  --text-sec: #8a849a;
+  --text-muted: #504c60;
+  --accent: #00e5ff;
+  --radius: 2px;
+
+  --kmb: #ff2d78; --kmb-bg: #ff2d7811;
+  --ctb: #ff8c2a; --ctb-bg: #ff8c2a11;
+  --nlb: #39ff8e; --nlb-bg: #39ff8e11;
+
+  --eta-hot: #ff2d78; --eta-hot-bg: #ff2d7812;
+  --eta-warm: #ff8c2a; --eta-warm-bg: #ff8c2a10;
+  --eta-cool: #8a849a;
+  --eta-dead: #3a3648;
+}
+
+*,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+html { font-size:16px; -webkit-text-size-adjust:100%; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  max-width: 430px;
+  margin: 0 auto;
+  overflow-x: hidden;
+}
+
+.skip {
+  position: absolute; top: -100%; left: 0.75rem;
+  background: var(--accent); color: #fff;
+  padding: 0.4rem 0.8rem; border-radius: 0 0 6px 6px;
+  font-weight: 700; font-size: 0.8rem;
+  z-index: 9999; text-decoration: none;
+}
+.skip:focus { top: 0; }
+
+.top-bar {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--surface);
+  border-bottom: 2px solid var(--text);
+  padding: 0.55rem 0.75rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+[data-theme="dark"] .top-bar {
+  border-bottom-color: var(--kmb);
+  box-shadow: 0 1px 20px #ff2d7833;
+}
+
+.app-title {
+  font-weight: 900; font-size: 1rem;
+  letter-spacing: 0.04em;
+  display: flex; align-items: center; gap: 0.3rem;
+}
+[data-theme="dark"] .app-title {
+  color: var(--kmb);
+  text-shadow: 0 0 10px #ff2d7844, 0 0 30px #ff2d7822;
+}
+
+.live-dot {
+  width: 7px; height: 7px;
+  background: #10b981; border-radius: 50%;
+  animation: blink 2s step-end infinite;
+}
+[data-theme="dark"] .live-dot {
+  background: var(--nlb);
+  box-shadow: 0 0 6px var(--nlb), 0 0 14px #39ff8e44;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+.top-actions { display: flex; gap: 0.4rem; align-items: center; }
+
+.btn {
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--card); color: var(--text-sec);
+  font-family: inherit; font-size: 0.75rem; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; gap: 0.2rem;
+}
+.btn:hover { background: var(--bg); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[data-theme="dark"] .btn {
+  border-color: var(--accent); color: var(--accent);
+  background: transparent;
+  text-shadow: 0 0 6px #00e5ff33;
+  box-shadow: 0 0 8px #00e5ff22, inset 0 0 6px #00e5ff11;
+}
+[data-theme="dark"] .btn:hover { background: #00e5ff11; }
+
+.map-wrap {
+  height: 180px; position: relative; overflow: hidden;
+  transition: height 0.3s ease;
+  border-bottom: 2px solid var(--text);
+}
+[data-theme="dark"] .map-wrap { border-bottom-color: var(--card-border); }
+.map-wrap.collapsed { height: 0; border-bottom: none; }
+#map { width: 100%; height: 100%; background: var(--bg); }
+
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius) !important;
+  font-family: var(--font) !important;
+  font-size: 0.78rem !important;
+}
+
+.content {
+  padding: 0.6rem 0.75rem;
+  display: flex; flex-direction: column; gap: 0.4rem;
+}
+
+.section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.25rem 0;
+}
+.section-head span {
+  font-size: 0.7rem; font-weight: 600;
+  color: var(--text-muted); text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.data-ts { font-size: 0.65rem; color: var(--text-muted); font-family: var(--mono); }
+
+.eta-card {
+  background: var(--card);
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 0.8rem 0.85rem;
+  position: relative; overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  -webkit-user-select: none; user-select: none;
+}
+.eta-card::before {
+  content: ''; position: absolute;
+  left: 0; top: 0; bottom: 0; width: 4px;
+}
+.eta-card.kmb::before { background: var(--kmb); }
+.eta-card.ctb::before { background: var(--ctb); }
+.eta-card.nlb::before { background: var(--nlb); }
+
+.eta-card.starred { border-width: 2px; }
+.eta-card.starred.kmb { border-color: var(--kmb); box-shadow: 0 0 12px color-mix(in srgb, var(--kmb) 25%, transparent); }
+.eta-card.starred.ctb { border-color: var(--ctb); box-shadow: 0 0 12px color-mix(in srgb, var(--ctb) 25%, transparent); }
+.eta-card.starred.nlb { border-color: var(--nlb); box-shadow: 0 0 12px color-mix(in srgb, var(--nlb) 25%, transparent); }
+[data-theme="dark"] .eta-card.starred.kmb { box-shadow: 0 0 16px #ff2d7844, inset 0 0 30px #ff2d7808; }
+[data-theme="dark"] .eta-card.starred.ctb { box-shadow: 0 0 16px #ff8c2a44, inset 0 0 30px #ff8c2a08; }
+[data-theme="dark"] .eta-card.starred.nlb { box-shadow: 0 0 16px #39ff8e44, inset 0 0 30px #39ff8e08; }
+
+.eta-card.too-far { opacity: 0.55; }
+.eta-card.too-far.starred { opacity: 1; }
+
+.card-top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 0.45rem;
+}
+.route-block { display: flex; align-items: baseline; gap: 0.35rem; }
+
+.route-num {
+  font-size: 1.5rem; font-weight: 900; line-height: 1;
+  letter-spacing: -0.02em;
+}
+[data-theme="dark"] .eta-card.kmb .route-num { color: var(--kmb); text-shadow: 0 0 12px #ff2d7844; }
+[data-theme="dark"] .eta-card.ctb .route-num { color: var(--ctb); text-shadow: 0 0 12px #ff8c2a44; }
+[data-theme="dark"] .eta-card.nlb .route-num { color: var(--nlb); text-shadow: 0 0 12px #39ff8e44; }
+
+.op-badge {
+  font-size: 0.58rem; font-weight: 700;
+  padding: 0.1rem 0.3rem; border-radius: 3px;
+  letter-spacing: 0.04em; line-height: 1;
+  border: 1px solid transparent;
+}
+.op-badge.kmb { background: var(--kmb-bg); color: var(--kmb); border-color: color-mix(in srgb, var(--kmb) 30%, transparent); }
+.op-badge.ctb { background: var(--ctb-bg); color: var(--ctb); border-color: color-mix(in srgb, var(--ctb) 30%, transparent); }
+.op-badge.nlb { background: var(--nlb-bg); color: var(--nlb); border-color: color-mix(in srgb, var(--nlb) 30%, transparent); }
+
+.destination {
+  font-size: 1.05rem; font-weight: 700; line-height: 1.3;
+  text-align: right; max-width: 55%;
+}
+
+.star-btn {
+  position: absolute; top: 0.4rem; right: 0.5rem;
+  background: none; border: none; cursor: pointer;
+  font-size: 1rem; color: var(--text-muted);
+  opacity: 0.4; transition: opacity 0.2s, color 0.2s;
+  padding: 0.2rem;
+}
+.star-btn:hover { opacity: 0.8; }
+.star-btn.active { opacity: 1; }
+.star-btn.active.kmb { color: var(--kmb); }
+.star-btn.active.ctb { color: var(--ctb); }
+.star-btn.active.nlb { color: var(--nlb); }
+[data-theme="dark"] .star-btn.active { text-shadow: 0 0 8px currentColor; }
+
+.eta-row {
+  display: flex; align-items: baseline; gap: 0.45rem;
+  margin-bottom: 0.3rem; padding: 0.15rem 0;
+}
+.eta-label {
+  font-size: 0.63rem; font-weight: 500;
+  color: var(--text-muted); min-width: 16px;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.eta-vals { display: flex; gap: 0.25rem; flex-wrap: wrap; align-items: baseline; }
+
+.eta-chip {
+  font-family: var(--mono); font-size: 0.85rem;
+  font-weight: 500; padding: 0.1rem 0.4rem;
+  border-radius: 3px; font-variant-numeric: tabular-nums;
+}
+.eta-chip.hot { color: var(--eta-hot); background: var(--eta-hot-bg); font-weight: 700; }
+[data-theme="dark"] .eta-chip.hot { text-shadow: 0 0 8px #ff2d7844; border: 1px solid #ff2d7833; }
+.eta-chip.warm { color: var(--eta-warm); background: var(--eta-warm-bg); }
+[data-theme="dark"] .eta-chip.warm { text-shadow: 0 0 6px #ff8c2a33; border: 1px solid #ff8c2a22; }
+.eta-chip.cool { color: var(--eta-cool); }
+.eta-chip.na { color: var(--eta-dead); font-style: italic; font-size: 0.78rem; }
+.sep { color: var(--text-muted); font-size: 0.65rem; }
+
+.route-only {
+  display: flex; align-items: baseline; gap: 0.45rem;
+  padding: 0.15rem 0; opacity: 0.6;
+}
+.route-only .rnum { font-weight: 700; font-size: 0.85rem; min-width: 36px; }
+.route-only .rdest { font-size: 0.78rem; color: var(--text-sec); }
+
+.stop-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 0.45rem; padding-top: 0.35rem;
+  border-top: 1px dashed var(--card-border);
+}
+.stop-name { font-size: 0.72rem; color: var(--text-sec); font-weight: 500; }
+.stop-dist {
+  font-family: var(--mono); font-size: 0.7rem;
+  color: var(--text-muted); font-variant-numeric: tabular-nums;
+}
+[data-theme="dark"] .stop-dist { color: var(--accent); text-shadow: 0 0 4px #00e5ff33; }
+
+.loading-msg {
+  text-align: center; padding: 2rem 1rem;
+  color: var(--text-muted); font-size: 0.85rem;
+}
+.loading-msg .spinner {
+  display: inline-block; width: 20px; height: 20px;
+  border: 2px solid var(--card-border);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 0.5rem; vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.toast {
+  position: fixed; bottom: 4rem; left: 50%; transform: translateX(-50%);
+  background: var(--text); color: var(--bg);
+  padding: 0.5rem 1rem; border-radius: 20px;
+  font-size: 0.78rem; font-weight: 600;
+  z-index: 9999; opacity: 0;
+  transition: opacity 0.3s; pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+.footer {
+  padding: 0.8rem 0.75rem 1.5rem;
+  text-align: center; font-size: 0.62rem;
+  color: var(--text-muted); line-height: 1.6;
+}
+.footer .live-row {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  margin-bottom: 0.2rem;
+}
+.footer .f-dot {
+  width: 5px; height: 5px; background: #10b981; border-radius: 50%;
+}
+[data-theme="dark"] .footer .f-dot {
+  background: var(--nlb);
+  box-shadow: 0 0 4px var(--nlb), 0 0 10px #39ff8e33;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot, .loading-msg .spinner { animation: none; }
+  .map-wrap { transition: none; }
+}
+
+[data-theme="dark"] .leaflet-tile {
+  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+}
+[data-theme="dark"] .leaflet-container { background: #0a0a0f; }
+[data-theme="dark"] .leaflet-control-zoom a {
+  background: #1a1a2e; color: #e8e4f0; border-color: #2a2a3e;
+}
+</style>
+</head>
+<body>
+
+<a href="#card-list" class="skip">跳到巴士站列表</a>
+
+<header class="top-bar" role="banner">
+  <div class="app-title">
+    <span class="live-dot" aria-hidden="true"></span>
+    巴士到站
+  </div>
+  <div class="top-actions">
+    <button class="btn" id="btnTheme" aria-label="切換深色/淺色模式">◐</button>
+    <button class="btn" id="btnMap" aria-label="顯示地圖" aria-expanded="true">◎ 地圖</button>
+  </div>
+</header>
+
+<div class="map-wrap" id="mapWrap">
+  <div id="map"></div>
+</div>
+
+<main class="content" id="card-list">
+  <div class="section-head">
+    <span id="sectionLabel">附近巴士站</span>
+    <span class="data-ts" id="dataTs"></span>
+  </div>
+  <div id="cardContainer">
+    <div class="loading-msg" id="loadingMsg">
+      <div class="spinner"></div><br>正在載入資料...
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<footer class="footer" role="contentinfo">
+  <div class="live-row">
+    <span class="f-dot" aria-hidden="true"></span>
+    <span>每 15 秒自動更新</span>
+  </div>
+  <div>資料來源：data.gov.hk</div>
+</footer>
+
+</body>
+</html>
