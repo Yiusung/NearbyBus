@@ -8,7 +8,7 @@ const CONFIG = {
   ETA_PROXY:       '/api/eta',
 
   // ── Geo ──────────────────────────────────────
-  NEARBY_RADIUS:   200,              // meters — ETA cards
+  NEARBY_RADIUS:   300,              // meters — ETA cards
   MAP_RADIUS:      500,              // meters — map dots
 
   // At HK latitude (~22.3°N):
