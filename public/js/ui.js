@@ -90,11 +90,9 @@ function uiUpdateTimestamp(ts) {
 function uiRenderCards(cards) {
   $cardContainer.innerHTML = '';
 
-  // Track previous stopId to insert a stop separator
   let prevStopId = null;
 
   for (const card of cards) {
-    // Insert stop separator when we move to a new stop
     if (card.stopId !== prevStopId) {
       $cardContainer.appendChild(uiBuildStopSeparator(card));
       prevStopId = card.stopId;
@@ -104,7 +102,7 @@ function uiRenderCards(cards) {
 }
 
 /**
- * Small divider showing stop name + distance between stop groups.
+ * Small divider showing stop name + distance.
  */
 function uiBuildStopSeparator(card) {
   const div = document.createElement('div');
@@ -118,76 +116,77 @@ function uiBuildStopSeparator(card) {
 /**
  * Build a single ETA card — one per route.
  */
- function uiBuildCard(card) {
-   // Normalize operator to lowercase for CSS class matching
-   card.op = (card.op || '').toLowerCase();
-   const el = document.createElement('article');
-   el.className = [
-     'eta-card',
-     card.op,
-     card.isStarred ? 'starred' : '',
-     card.isTooFar ? 'too-far' : '',
-   ].filter(Boolean).join(' ');
-   el.dataset.stopId = card.stopId;
-   el.setAttribute('aria-label', `路線 ${card.route}，${card.dest}，${card.stopNameTc}`);
+function uiBuildCard(card) {
+  card.op = (card.op || '').toLowerCase();
 
-   // Star button
-   const starBtn = document.createElement('button');
-   starBtn.className = `star-btn ${card.op}${card.isStarred ? ' active' : ''}`;
-   starBtn.textContent = card.isStarred ? '★' : '☆';
-   starBtn.setAttribute('aria-label', card.isStarred ? '取消收藏' : '收藏此站');
-   starBtn.addEventListener('click', e => {
-     e.stopPropagation();
-     Stars.toggle(card.stopId, card.op);
-   });
-   el.appendChild(starBtn);
+  const el = document.createElement('article');
+  el.className = [
+    'eta-card',
+    card.op,
+    card.isStarred ? 'starred' : '',
+    card.isTooFar ? 'too-far' : '',
+  ].filter(Boolean).join(' ');
+  el.dataset.stopId = card.stopId;
+  el.dataset.route = card.route;
+  el.setAttribute('aria-label', `路線 ${card.route}，${card.dest}，${card.stopNameTc}`);
 
-   // Card top: route + operator + destination
-   const cardTop = document.createElement('div');
-   cardTop.className = 'card-top';
-   cardTop.innerHTML = `
-     <div class="route-block">
-       <span class="route-num">${uiEsc(card.route)}</span>
-       <span class="op-badge ${card.op}">${CONFIG.OP_LABEL[card.op] || card.op}</span>
-     </div>
-     <span class="destination">${uiEsc(card.dest)}</span>`;
-   el.appendChild(cardTop);
+  // Star button — stars THIS route at THIS stop
+  const starBtn = document.createElement('button');
+  starBtn.className = `star-btn ${card.op}${card.isStarred ? ' active' : ''}`;
+  starBtn.textContent = card.isStarred ? '★' : '☆';
+  starBtn.setAttribute('aria-label', card.isStarred ? '取消收藏' : '收藏此路線');
+  starBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    Stars.toggle(card.stopId, card.route, card.op);
+  });
+  el.appendChild(starBtn);
 
-   // ETA chips — each chip inherits operator color via parent .eta-card.kmb etc.
-   const etaRow = document.createElement('div');
-   etaRow.className = 'eta-row';
+  // Card top: route + operator + destination
+  const cardTop = document.createElement('div');
+  cardTop.className = 'card-top';
+  cardTop.innerHTML = `
+    <div class="route-block">
+      <span class="route-num">${uiEsc(card.route)}</span>
+      <span class="op-badge ${card.op}">${CONFIG.OP_LABEL[card.op] || card.op}</span>
+    </div>
+    <span class="destination">${uiEsc(card.dest)}</span>`;
+  el.appendChild(cardTop);
 
-   let etaHTML;
-   if (card.etas.length > 0) {
-     etaHTML = card.etas.slice(0, CONFIG.MAX_ETA_TIMES).map((m, i) => {
-       const cls = m <= 2 ? 'hot' : m <= 8 ? 'warm' : 'cool';
-       const sep = i > 0 ? '<span class="sep">·</span>' : '';
-       return `${sep}<span class="eta-chip ${cls}">${m}分</span>`;
-     }).join('');
-   } else {
-     etaHTML = '<span class="eta-chip na">暫無班次</span>';
-   }
+  // ETA chips
+  const etaRow = document.createElement('div');
+  etaRow.className = 'eta-row';
 
-   etaRow.innerHTML = `
-     <span class="eta-label">到站</span>
-     <div class="eta-vals">${etaHTML}</div>`;
-   el.appendChild(etaRow);
+  let etaHTML;
+  if (card.etas.length > 0) {
+    etaHTML = card.etas.slice(0, CONFIG.MAX_ETA_TIMES).map((m, i) => {
+      const cls = m <= 2 ? 'hot' : m <= 8 ? 'warm' : 'cool';
+      const sep = i > 0 ? '<span class="sep">·</span>' : '';
+      return `${sep}<span class="eta-chip ${cls}">${m}分</span>`;
+    }).join('');
+  } else {
+    etaHTML = '<span class="eta-chip na">暫無班次</span>';
+  }
 
-   // Long-press / double-click
-   uiSetupStarGesture(el, card.stopId, card.op);
+  etaRow.innerHTML = `
+    <span class="eta-label">到站</span>
+    <div class="eta-vals">${etaHTML}</div>`;
+  el.appendChild(etaRow);
 
-   return el;
- }
+  // Long-press / double-click — targets THIS route
+  uiSetupStarGesture(el, card.stopId, card.route, card.op);
+
+  return el;
+}
 
 /**
  * Attach long-press (mobile) and double-click (desktop) star gestures.
  */
-function uiSetupStarGesture(el, stopId, op) {
+function uiSetupStarGesture(el, stopId, route, op) {
   let pressTimer = null;
 
   el.addEventListener('touchstart', () => {
     pressTimer = setTimeout(() => {
-      Stars.toggle(stopId, op);
+      Stars.toggle(stopId, route, op);
       navigator.vibrate?.(30);
     }, 600);
   }, { passive: true });
@@ -197,7 +196,7 @@ function uiSetupStarGesture(el, stopId, op) {
 
   el.addEventListener('dblclick', e => {
     if (e.target.closest('.star-btn')) return;
-    Stars.toggle(stopId, op);
+    Stars.toggle(stopId, route, op);
   });
 }
 

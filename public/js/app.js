@@ -90,21 +90,21 @@ async function AppRender() {
 
       for (const route of routes) {
         cards.push({
-          route:     route.route,
-          dest:      route.dest,
-          op:        route.op.toLowerCase(),
-          etas:      route.etas,
-          stopId:    stop.id,
+          route:      route.route,
+          dest:       route.dest,
+          op:         route.op.toLowerCase(),
+          etas:       route.etas,
+          stopId:     stop.id,
           stopNameTc: stop.tc,
           stopNameEn: stop.en,
-          dist:      stop._dist,
-          isStarred: Stars.has(stop.id),
-          isTooFar:  stop._dist > CONFIG.NEARBY_RADIUS,
+          dist:       stop._dist,
+          isStarred:  Stars.has(stop.id, route.route),   // ← per route
+          isTooFar:   stop._dist > CONFIG.NEARBY_RADIUS,
         });
       }
     }
 
-    // 5. Sort: starred stops first, then by distance, then by route
+    // 5. Sort: starred routes first, then by distance, then by route
     cards.sort((a, b) => {
       if (a.isStarred !== b.isStarred) return b.isStarred - a.isStarred;
       if (a.dist !== b.dist) return a.dist - b.dist;
