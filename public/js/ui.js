@@ -118,64 +118,64 @@ function uiBuildStopSeparator(card) {
 /**
  * Build a single ETA card — one per route.
  */
-function uiBuildCard(card) {
-  const el = document.createElement('article');
-  el.className = [
-    'eta-card',
-    card.op,
-    card.isStarred ? 'starred' : '',
-    card.isTooFar ? 'too-far' : '',
-  ].filter(Boolean).join(' ');
-  el.dataset.stopId = card.stopId;
-  el.setAttribute('aria-label', `路線 ${card.route}，${card.dest}，${card.stopNameTc}`);
+ function uiBuildCard(card) {
+   const el = document.createElement('article');
+   el.className = [
+     'eta-card',
+     card.op,
+     card.isStarred ? 'starred' : '',
+     card.isTooFar ? 'too-far' : '',
+   ].filter(Boolean).join(' ');
+   el.dataset.stopId = card.stopId;
+   el.setAttribute('aria-label', `路線 ${card.route}，${card.dest}，${card.stopNameTc}`);
 
-  // Star button (stars the stop, not individual route)
-  const starBtn = document.createElement('button');
-  starBtn.className = `star-btn ${card.op}${card.isStarred ? ' active' : ''}`;
-  starBtn.textContent = card.isStarred ? '★' : '☆';
-  starBtn.setAttribute('aria-label', card.isStarred ? '取消收藏' : '收藏此站');
-  starBtn.addEventListener('click', e => {
-    e.stopPropagation();
-    Stars.toggle(card.stopId, card.op);
-  });
-  el.appendChild(starBtn);
+   // Star button
+   const starBtn = document.createElement('button');
+   starBtn.className = `star-btn ${card.op}${card.isStarred ? ' active' : ''}`;
+   starBtn.textContent = card.isStarred ? '★' : '☆';
+   starBtn.setAttribute('aria-label', card.isStarred ? '取消收藏' : '收藏此站');
+   starBtn.addEventListener('click', e => {
+     e.stopPropagation();
+     Stars.toggle(card.stopId, card.op);
+   });
+   el.appendChild(starBtn);
 
-  // Card top: route number + operator badge + destination
-  const cardTop = document.createElement('div');
-  cardTop.className = 'card-top';
-  cardTop.innerHTML = `
-    <div class="route-block">
-      <span class="route-num">${uiEsc(card.route)}</span>
-      <span class="op-badge ${card.op}">${CONFIG.OP_LABEL[card.op] || card.op}</span>
-    </div>
-    <span class="destination">${uiEsc(card.dest)}</span>`;
-  el.appendChild(cardTop);
+   // Card top: route + operator + destination
+   const cardTop = document.createElement('div');
+   cardTop.className = 'card-top';
+   cardTop.innerHTML = `
+     <div class="route-block">
+       <span class="route-num">${uiEsc(card.route)}</span>
+       <span class="op-badge ${card.op}">${CONFIG.OP_LABEL[card.op] || card.op}</span>
+     </div>
+     <span class="destination">${uiEsc(card.dest)}</span>`;
+   el.appendChild(cardTop);
 
-  // ETA chips
-  const etaRow = document.createElement('div');
-  etaRow.className = 'eta-row';
+   // ETA chips — each chip inherits operator color via parent .eta-card.kmb etc.
+   const etaRow = document.createElement('div');
+   etaRow.className = 'eta-row';
 
-  let etaHTML;
-  if (card.etas.length > 0) {
-    etaHTML = card.etas.slice(0, CONFIG.MAX_ETA_TIMES).map((m, i) => {
-      const cls = etaClass(m);
-      const sep = i > 0 ? '<span class="sep">·</span>' : '';
-      return `${sep}<span class="eta-chip ${cls}">${m}分</span>`;
-    }).join('');
-  } else {
-    etaHTML = '<span class="eta-chip na">暫無班次</span>';
-  }
+   let etaHTML;
+   if (card.etas.length > 0) {
+     etaHTML = card.etas.slice(0, CONFIG.MAX_ETA_TIMES).map((m, i) => {
+       const cls = m <= 2 ? 'hot' : m <= 8 ? 'warm' : 'cool';
+       const sep = i > 0 ? '<span class="sep">·</span>' : '';
+       return `${sep}<span class="eta-chip ${cls}">${m}分</span>`;
+     }).join('');
+   } else {
+     etaHTML = '<span class="eta-chip na">暫無班次</span>';
+   }
 
-  etaRow.innerHTML = `
-    <span class="eta-label">到站</span>
-    <div class="eta-vals">${etaHTML}</div>`;
-  el.appendChild(etaRow);
+   etaRow.innerHTML = `
+     <span class="eta-label">到站</span>
+     <div class="eta-vals">${etaHTML}</div>`;
+   el.appendChild(etaRow);
 
-  // Long-press / double-click for starring
-  uiSetupStarGesture(el, card.stopId, card.op);
+   // Long-press / double-click
+   uiSetupStarGesture(el, card.stopId, card.op);
 
-  return el;
-}
+   return el;
+ }
 
 /**
  * Attach long-press (mobile) and double-click (desktop) star gestures.
