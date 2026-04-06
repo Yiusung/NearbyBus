@@ -51,10 +51,11 @@ function etaGroupByRoute(rawETAs, fallbackOp) {
   for (const e of rawETAs) {
     const key = e.route;
     if (!routeMap[key]) {
+      const rawOp = e.co || fallbackOp || '';
       routeMap[key] = {
         route: key,
         dest: e.dest_tc || e.dest_en || '',
-        op: e.co || fallbackOp,
+        op: rawOp.toLowerCase(),
         etas: [],
       };
     }
