@@ -32,14 +32,14 @@ async function handleETA(request, ctx) {
   try {
     const resp = await fetch(upstreamUrl, {
       headers: { Accept: "application/json" },
-      cf: { cacheTtl: 15, cacheEverything: true },
+      cf: { cacheTtl: 30, cacheEverything: true },
     });
 
     const response = new Response(resp.body, {
       status: resp.status,
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        "Cache-Control": "public, max-age=15, s-maxage=15",
+        "Cache-Control": "public, max-age=30, s-maxage=30",
         "Access-Control-Allow-Origin": "*",
         "X-Content-Type-Options": "nosniff",
       },
