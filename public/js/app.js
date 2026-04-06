@@ -92,7 +92,7 @@ async function AppRender() {
         cards.push({
           route:     route.route,
           dest:      route.dest,
-          op:        route.op,
+          op:        route.op.toLowerCase(),
           etas:      route.etas,
           stopId:    stop.id,
           stopNameTc: stop.tc,
