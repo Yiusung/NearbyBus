@@ -119,6 +119,8 @@ function uiBuildStopSeparator(card) {
  * Build a single ETA card — one per route.
  */
  function uiBuildCard(card) {
+   // Normalize operator to lowercase for CSS class matching
+   card.op = (card.op || '').toLowerCase();
    const el = document.createElement('article');
    el.className = [
      'eta-card',
