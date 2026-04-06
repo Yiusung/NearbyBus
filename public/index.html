@@ -281,24 +281,36 @@ body {
 .eta-chip.na { color: var(--eta-dead); font-style: italic; font-size: 0.78rem; }
 .sep { color: var(--text-muted); font-size: 0.65rem; }
 
-.route-only {
-  display: flex; align-items: baseline; gap: 0.45rem;
-  padding: 0.15rem 0; opacity: 0.6;
-}
-.route-only .rnum { font-weight: 700; font-size: 0.85rem; min-width: 36px; }
-.route-only .rdest { font-size: 0.78rem; color: var(--text-sec); }
-
-.stop-meta {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-top: 0.45rem; padding-top: 0.35rem;
-  border-top: 1px dashed var(--card-border);
-}
-.stop-name { font-size: 0.72rem; color: var(--text-sec); font-weight: 500; }
-.stop-dist {
-  font-family: var(--mono); font-size: 0.7rem;
-  color: var(--text-muted); font-variant-numeric: tabular-nums;
-}
 [data-theme="dark"] .stop-dist { color: var(--accent); text-shadow: 0 0 4px #00e5ff33; }
+
+/* ── Stop Separator ────────────────────────── */
+.stop-separator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.1rem 0.25rem;
+  margin-top: 0.2rem;
+  border-bottom: 1px solid var(--card-border);
+}
+.stop-separator:first-child {
+  margin-top: 0;
+}
+.stop-sep-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-sec);
+  letter-spacing: 0.02em;
+}
+.stop-sep-dist {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+[data-theme="dark"] .stop-sep-dist {
+  color: var(--accent);
+  text-shadow: 0 0 4px #00e5ff33;
+}
 
 .loading-msg {
   text-align: center; padding: 2rem 1rem;
