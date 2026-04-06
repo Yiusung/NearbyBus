@@ -31,10 +31,6 @@
 <script src="/js/app.js"></script>
 
 <style>
-/* ═══════════════════════════════════════════════════
-   CSS — Light (Street Signage) + Dark (Neon) Themes
-   ═══════════════════════════════════════════════════ */
-
 :root {
   --bg: #f0ece4;
   --surface: #faf8f3;
@@ -51,11 +47,6 @@
   --kmb: #cc2233; --kmb-bg: #fdf0f0;
   --ctb: #d4880a; --ctb-bg: #fdf6e8;
   --nlb: #1a6b3c; --nlb-bg: #eef8f2;
-
-  --eta-hot: #cc2233; --eta-hot-bg: #fdf0f0;
-  --eta-warm: #d4880a; --eta-warm-bg: #fdf6e8;
-  --eta-cool: #5a5347;
-  --eta-dead: #8c8478;
 }
 
 [data-theme="dark"] {
@@ -72,11 +63,6 @@
   --kmb: #ff2d78; --kmb-bg: #ff2d7811;
   --ctb: #ff8c2a; --ctb-bg: #ff8c2a11;
   --nlb: #39ff8e; --nlb-bg: #39ff8e11;
-
-  --eta-hot: #ff2d78; --eta-hot-bg: #ff2d7812;
-  --eta-warm: #ff8c2a; --eta-warm-bg: #ff8c2a10;
-  --eta-cool: #8a849a;
-  --eta-dead: #3a3648;
 }
 
 *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
@@ -101,6 +87,7 @@ body {
 }
 .skip:focus { top: 0; }
 
+/* ── Top Bar ────────────────────────────────── */
 .top-bar {
   position: sticky; top: 0; z-index: 100;
   background: var(--surface);
@@ -155,6 +142,7 @@ body {
 }
 [data-theme="dark"] .btn:hover { background: #00e5ff11; }
 
+/* ── Map ────────────────────────────────────── */
 .map-wrap {
   height: 180px; position: relative; overflow: hidden;
   transition: height 0.3s ease;
@@ -170,6 +158,7 @@ body {
   font-size: 0.78rem !important;
 }
 
+/* ── Content ────────────────────────────────── */
 .content {
   padding: 0.6rem 0.75rem;
   display: flex; flex-direction: column; gap: 0.4rem;
@@ -186,6 +175,27 @@ body {
 }
 .data-ts { font-size: 0.65rem; color: var(--text-muted); font-family: var(--mono); }
 
+/* ── Stop Separator ─────────────────────────── */
+.stop-separator {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.6rem 0.1rem 0.25rem;
+  margin-top: 0.2rem;
+  border-bottom: 1px solid var(--card-border);
+}
+.stop-separator:first-child { margin-top: 0; }
+.stop-sep-name {
+  font-size: 0.72rem; font-weight: 600;
+  color: var(--text-sec); letter-spacing: 0.02em;
+}
+.stop-sep-dist {
+  font-family: var(--mono); font-size: 0.68rem;
+  color: var(--text-muted); font-variant-numeric: tabular-nums;
+}
+[data-theme="dark"] .stop-sep-dist {
+  color: var(--accent); text-shadow: 0 0 4px #00e5ff33;
+}
+
+/* ── ETA Card — Base ────────────────────────── */
 .eta-card {
   background: var(--card);
   border: 1.5px solid var(--card-border);
@@ -195,14 +205,116 @@ body {
   transition: border-color 0.2s, box-shadow 0.2s;
   -webkit-user-select: none; user-select: none;
 }
+
+/* Left stripe */
 .eta-card::before {
   content: ''; position: absolute;
   left: 0; top: 0; bottom: 0; width: 4px;
 }
+
+/* ══════════════════════════════════════════════
+   OPERATOR: KMB
+   ══════════════════════════════════════════════ */
 .eta-card.kmb::before { background: var(--kmb); }
+
+.eta-card.kmb .route-num {
+  color: var(--kmb);
+}
+
+.eta-card.kmb .eta-chip.hot {
+  color: var(--kmb);
+  background: var(--kmb-bg);
+  font-weight: 700;
+}
+.eta-card.kmb .eta-chip.warm {
+  color: var(--kmb);
+  background: var(--kmb-bg);
+  opacity: 0.8;
+}
+[data-theme="dark"] .eta-card.kmb .route-num {
+  text-shadow: 0 0 12px #ff2d7844, 0 0 30px #ff2d7822;
+}
+[data-theme="dark"] .eta-card.kmb .eta-chip.hot {
+  text-shadow: 0 0 8px #ff2d7844;
+  border: 1px solid #ff2d7833;
+}
+[data-theme="dark"] .eta-card.kmb .eta-chip.warm {
+  text-shadow: 0 0 6px #ff2d7822;
+  border: 1px solid #ff2d7818;
+}
+[data-theme="dark"] .eta-card.kmb {
+  box-shadow: inset 0 0 30px #ff2d7806;
+}
+
+/* ══════════════════════════════════════════════
+   OPERATOR: CTB
+   ══════════════════════════════════════════════ */
 .eta-card.ctb::before { background: var(--ctb); }
+
+.eta-card.ctb .route-num {
+  color: var(--ctb);
+}
+
+.eta-card.ctb .eta-chip.hot {
+  color: var(--ctb);
+  background: var(--ctb-bg);
+  font-weight: 700;
+}
+.eta-card.ctb .eta-chip.warm {
+  color: var(--ctb);
+  background: var(--ctb-bg);
+  opacity: 0.8;
+}
+[data-theme="dark"] .eta-card.ctb .route-num {
+  text-shadow: 0 0 12px #ff8c2a44, 0 0 30px #ff8c2a22;
+}
+[data-theme="dark"] .eta-card.ctb .eta-chip.hot {
+  text-shadow: 0 0 8px #ff8c2a44;
+  border: 1px solid #ff8c2a33;
+}
+[data-theme="dark"] .eta-card.ctb .eta-chip.warm {
+  text-shadow: 0 0 6px #ff8c2a22;
+  border: 1px solid #ff8c2a18;
+}
+[data-theme="dark"] .eta-card.ctb {
+  box-shadow: inset 0 0 30px #ff8c2a06;
+}
+
+/* ══════════════════════════════════════════════
+   OPERATOR: NLB
+   ══════════════════════════════════════════════ */
 .eta-card.nlb::before { background: var(--nlb); }
 
+.eta-card.nlb .route-num {
+  color: var(--nlb);
+}
+
+.eta-card.nlb .eta-chip.hot {
+  color: var(--nlb);
+  background: var(--nlb-bg);
+  font-weight: 700;
+}
+.eta-card.nlb .eta-chip.warm {
+  color: var(--nlb);
+  background: var(--nlb-bg);
+  opacity: 0.8;
+}
+[data-theme="dark"] .eta-card.nlb .route-num {
+  text-shadow: 0 0 12px #39ff8e44, 0 0 30px #39ff8e22;
+}
+[data-theme="dark"] .eta-card.nlb .eta-chip.hot {
+  text-shadow: 0 0 8px #39ff8e44;
+  border: 1px solid #39ff8e33;
+}
+[data-theme="dark"] .eta-card.nlb .eta-chip.warm {
+  text-shadow: 0 0 6px #39ff8e22;
+  border: 1px solid #39ff8e18;
+}
+[data-theme="dark"] .eta-card.nlb {
+  box-shadow: inset 0 0 30px #39ff8e06;
+}
+
+/* ── Starred (all operators) ────────────────── */
 .eta-card.starred { border-width: 2px; }
 .eta-card.starred.kmb { border-color: var(--kmb); box-shadow: 0 0 12px color-mix(in srgb, var(--kmb) 25%, transparent); }
 .eta-card.starred.ctb { border-color: var(--ctb); box-shadow: 0 0 12px color-mix(in srgb, var(--ctb) 25%, transparent); }
@@ -214,6 +326,7 @@ body {
 .eta-card.too-far { opacity: 0.55; }
 .eta-card.too-far.starred { opacity: 1; }
 
+/* ── Card Layout ────────────────────────────── */
 .card-top {
   display: flex; align-items: flex-start; justify-content: space-between;
   margin-bottom: 0.45rem;
@@ -223,10 +336,8 @@ body {
 .route-num {
   font-size: 1.5rem; font-weight: 900; line-height: 1;
   letter-spacing: -0.02em;
+  /* color is set per operator above */
 }
-[data-theme="dark"] .eta-card.kmb .route-num { color: var(--kmb); text-shadow: 0 0 12px #ff2d7844; }
-[data-theme="dark"] .eta-card.ctb .route-num { color: var(--ctb); text-shadow: 0 0 12px #ff8c2a44; }
-[data-theme="dark"] .eta-card.nlb .route-num { color: var(--nlb); text-shadow: 0 0 12px #39ff8e44; }
 
 .op-badge {
   font-size: 0.58rem; font-weight: 700;
@@ -241,8 +352,10 @@ body {
 .destination {
   font-size: 1.05rem; font-weight: 700; line-height: 1.3;
   text-align: right; max-width: 55%;
+  color: var(--text);
 }
 
+/* ── Star Button ────────────────────────────── */
 .star-btn {
   position: absolute; top: 0.4rem; right: 0.5rem;
   background: none; border: none; cursor: pointer;
@@ -257,6 +370,7 @@ body {
 .star-btn.active.nlb { color: var(--nlb); }
 [data-theme="dark"] .star-btn.active { text-shadow: 0 0 8px currentColor; }
 
+/* ── ETA Row ────────────────────────────────── */
 .eta-row {
   display: flex; align-items: baseline; gap: 0.45rem;
   margin-bottom: 0.3rem; padding: 0.15rem 0;
@@ -272,46 +386,15 @@ body {
   font-family: var(--mono); font-size: 0.85rem;
   font-weight: 500; padding: 0.1rem 0.4rem;
   border-radius: 3px; font-variant-numeric: tabular-nums;
+  /* color is set per operator above */
 }
-.eta-chip.hot { color: var(--eta-hot); background: var(--eta-hot-bg); font-weight: 700; }
-[data-theme="dark"] .eta-chip.hot { text-shadow: 0 0 8px #ff2d7844; border: 1px solid #ff2d7833; }
-.eta-chip.warm { color: var(--eta-warm); background: var(--eta-warm-bg); }
-[data-theme="dark"] .eta-chip.warm { text-shadow: 0 0 6px #ff8c2a33; border: 1px solid #ff8c2a22; }
-.eta-chip.cool { color: var(--eta-cool); }
-.eta-chip.na { color: var(--eta-dead); font-style: italic; font-size: 0.78rem; }
+
+/* cool (>8 min) stays muted regardless of operator */
+.eta-chip.cool { color: var(--text-muted); }
+.eta-chip.na { color: var(--text-muted); font-style: italic; font-size: 0.78rem; }
 .sep { color: var(--text-muted); font-size: 0.65rem; }
 
-[data-theme="dark"] .stop-dist { color: var(--accent); text-shadow: 0 0 4px #00e5ff33; }
-
-/* ── Stop Separator ────────────────────────── */
-.stop-separator {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.6rem 0.1rem 0.25rem;
-  margin-top: 0.2rem;
-  border-bottom: 1px solid var(--card-border);
-}
-.stop-separator:first-child {
-  margin-top: 0;
-}
-.stop-sep-name {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--text-sec);
-  letter-spacing: 0.02em;
-}
-.stop-sep-dist {
-  font-family: var(--mono);
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
-[data-theme="dark"] .stop-sep-dist {
-  color: var(--accent);
-  text-shadow: 0 0 4px #00e5ff33;
-}
-
+/* ── Loading / Empty ────────────────────────── */
 .loading-msg {
   text-align: center; padding: 2rem 1rem;
   color: var(--text-muted); font-size: 0.85rem;
@@ -325,6 +408,7 @@ body {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── Toast ──────────────────────────────────── */
 .toast {
   position: fixed; bottom: 4rem; left: 50%; transform: translateX(-50%);
   background: var(--text); color: var(--bg);
@@ -335,6 +419,7 @@ body {
 }
 .toast.show { opacity: 1; }
 
+/* ── Footer ─────────────────────────────────── */
 .footer {
   padding: 0.8rem 0.75rem 1.5rem;
   text-align: center; font-size: 0.62rem;
@@ -344,9 +429,7 @@ body {
   display: inline-flex; align-items: center; gap: 0.3rem;
   margin-bottom: 0.2rem;
 }
-.footer .f-dot {
-  width: 5px; height: 5px; background: #10b981; border-radius: 50%;
-}
+.footer .f-dot { width: 5px; height: 5px; background: #10b981; border-radius: 50%; }
 [data-theme="dark"] .footer .f-dot {
   background: var(--nlb);
   box-shadow: 0 0 4px var(--nlb), 0 0 10px #39ff8e33;
@@ -365,6 +448,7 @@ body {
   background: #1a1a2e; color: #e8e4f0; border-color: #2a2a3e;
 }
 </style>
+
 </head>
 <body>
 
