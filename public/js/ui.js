@@ -154,7 +154,7 @@ function uiBuildCard(card) {
   sb.setAttribute('aria-label',  sb.addEventListener('click', function(e) {
     e.stopPropagation();
     Stars.toggle(sid, rt, op);
-  });
+  }));
   el.appendChild(sb);
 
   // Card top
