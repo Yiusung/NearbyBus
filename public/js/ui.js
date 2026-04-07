@@ -35,9 +35,7 @@ function uiShowError(msg) {
 function uiToast(msg) {
   $toast.textContent = msg;
   $toast.classList.add('show');
-  setTimeout(function() {
-    $toast.classList.remove('show');
-  }, 2000);
+  setTimeout(function() { $toast.classList.remove('show'); }, 2000);
 }
 
 function uiLoadTheme() {
@@ -65,30 +63,19 @@ function uiToggleLang() {
 }
 
 function uiApplyLang() {
-  var allEls = document.querySelectorAll('[data-i18n]');
-  for (var i = 0; i < allEls.length; i++) {
-    var k = allEls[i].getAttribute('data-i18n');
-    allEls[i].textContent = t(k);
+  var nodes = document.querySelectorAll('[data-i18n]');
+  for (var i = 0; i < nodes.length; i++) {
+    nodes[i].textContent = t(nodes[i].getAttribute('data-i18n'));
   }
-  var langBtn = document.getElementById('btnLang');
-  if (langBtn) {
-    langBtn.textContent = uiLoadLang() === 'tc' ? 'EN' : '\u4e2d';
-  }
-  var skipEl = document.querySelector('.skip');
-  if (skipEl) {
-    skipEl.textContent = t('skipLink');
-  }
-  var themeBtn = document.getElementById('btnTheme');
-  if (themeBtn) {
-    themeBtn.setAttribute('aria-label', t('themeLabel'));
-  }
-  var mapBtn = document.getElementById('btnMap');
-  if (mapBtn) {
-    mapBtn.setAttribute('aria-label', t('mapLabel'));
-  }
-  if (typeof AppRefresh === 'function') {
-    AppRefresh();
-  }
+  var lb = document.getElementById('btnLang');
+  if (lb) lb.textContent = uiLoadLang() === 'tc' ? 'EN' : '\u4e2d';
+  var sk = document.querySelector('.skip');
+  if (sk) sk.textContent = t('skipLink');
+  var tb = document.getElementById('btnTheme');
+  if (tb) tb.setAttribute('aria-label', t('themeLabel'));
+  var mb = document.getElementById('btnMap');
+  if (mb) mb.setAttribute('aria-label', t('mapLabel'));
+  if (typeof AppRefresh === 'function') AppRefresh();
 }
 
 var mapVisible = true;
@@ -97,12 +84,9 @@ var autoHidden = false;
 function uiToggleMap() {
   mapVisible = !mapVisible;
   $mapWrap.classList.toggle('collapsed', !mapVisible);
-  var lbl = mapVisible ? t('map') : t('showMap');
-  $btnMap.textContent = '\u25ce ' + lbl;
+  $btnMap.textContent = '\u25ce ' + (mapVisible ? t('map') : t('showMap'));
   $btnMap.setAttribute('aria-expanded', mapVisible);
-  if (mapVisible) {
-    mapInvalidateSize();
-  }
+  if (mapVisible) mapInvalidateSize();
 }
 
 function uiInitScrollHide() {
@@ -118,14 +102,12 @@ function uiInitScrollHide() {
 }
 
 function uiUpdateSectionLabel(stopCount, cardCount) {
-  var txt = stopCount + ' ' + t('stops') + ' \u00b7 ' + cardCount + ' ' + t('routes');
-  $sectionLabel.textContent = txt;
+  $sectionLabel.textContent = stopCount + ' ' + t('stops') + ' \u00b7 ' + cardCount + ' ' + t('routes');
 }
 
 function uiUpdateTimestamp(ts) {
   if (ts) {
-    var d = new Date(ts);
-    $dataTs.textContent = t('dataLabel') + ': ' + d.toLocaleDateString('zh-HK');
+    $dataTs.textContent = t('dataLabel') + ': ' + new Date(ts).toLocaleDateString('zh-HK');
   }
 }
 
@@ -133,12 +115,11 @@ function uiRenderCards(cards) {
   $cardContainer.innerHTML = '';
   var prev = null;
   for (var i = 0; i < cards.length; i++) {
-    var c = cards[i];
-    if (c.stopId !== prev) {
-      $cardContainer.appendChild(uiBuildStopSeparator(c));
-      prev = c.stopId;
+    if (cards[i].stopId !== prev) {
+      $cardContainer.appendChild(uiBuildStopSeparator(cards[i]));
+      prev = cards[i].stopId;
     }
-    $cardContainer.appendChild(uiBuildCard(c));
+    $cardContainer.appendChild(uiBuildCard(cards[i]));
   }
 }
 
@@ -148,94 +129,75 @@ function uiBuildStopSeparator(card) {
   var lang = uiLoadLang();
   var pri = lang === 'en' ? card.stopNameEn : card.stopNameTc;
   var sec = lang === 'en' ? card.stopNameTc : card.stopNameEn;
-  var h = '';
-  h += '<span class="stop-sep-name">';
-  h += uiEsc(pri);
-  h += ' <span style="opacity:0.5;font-size:0.65rem">';
-  h += uiEsc(sec);
-  h += '</span></span>';
-  h += '<span class="stop-sep-dist">';
-  h += geoFormatDistance(card.dist);
-  h += '</span>';
-  div.innerHTML = h;
+  var dist = geoFormatDistance(card.dist);
+  div.innerHTML = '<span class="stop-sep-name">' + uiEsc(pri) + ' <span style="opacity:0.5;font-size:0.65rem">' + uiEsc(sec) + '</span></span><span class="stop-sep-dist">' + dist + '</span>';
   return div;
 }
 
 function uiBuildCard(card) {
   card.op = (card.op || '').toLowerCase();
-  var el = document.createElement('article');
-  var cls = 'eta-card ' + card.op;
-  if (card.isStarred) cls += ' starred';
-  if (card.isTooFar) cls += ' too-far';
-  el.className = cls;
-  el.setAttribute('data-stop-id', card.stopId);
-  el.setAttribute('data-route', card.route);
-
+  var op = card.op;
   var sid = card.stopId;
   var rt = card.route;
-  var op = card.op;
+  var starred = card.isStarred;
+  var tooFar = card.isTooFar;
 
-  var starBtn = document.createElement('button');
-  starBtn.className = 'star-btn ' + op;
-  if (card.isStarred) starBtn.className += ' active';
-  starBtn.textContent = card.isStarred ? '\u2605' : '\u2606';
-  starBtn.setAttribute('aria-label', card.isStarred ? t('unstar') : t('star'));
-  starBtn.addEventListener('click', function(e) {
+  var el = document.createElement('article');
+  el.className = 'eta-card ' + op + (starred ? ' starred' : '') + (tooFar ? ' too-far' : '');
+  el.setAttribute('data-stop-id', sid);
+  el.setAttribute('data-route', rt);
+
+  // Star button
+  var sb = document.createElement('button');
+  sb.className = 'star-btn ' + op + (starred ? ' active' : '');
+  sb.textContent = starred ? '\u2605' : '\u2606';
+  sb.setAttribute('aria-label',  sb.addEventListener('click', function(e) {
     e.stopPropagation();
     Stars.toggle(sid, rt, op);
   });
-  el.appendChild(starBtn);
+  el.appendChild(sb);
 
-  var topDiv = document.createElement('div');
-  topDiv.className = 'card-top';
-  var th  th += '<span class="route-num">' + uiEsc(card.route) + '</span>';
-  th += '<span class="op-badge ' + op + '">' + (CONFIG.OP_LABEL[op] || op) + '</span>';
-  th += '</div>';
-  th += '<span class="destination">' + uiEsc(card.dest) + '</span>';
-  topDiv.innerHTML = th;
-  el.appendChild(topDiv);
+  // Card top
+  var td = document.createElement('div');
+  td.className = 'card-top';
+  td.innerHTML = '<div class="route-block"><span class="route-num">' + uiEsc(rt) + '</span><span class="op-badge ' + op + '">' + (CONFIG.OP_LABEL[op] || op) + '</span></div><span class="destination">' + uiEsc(card.dest) + '</span>';
+  el.appendChild(td);
 
-  var etaDiv = document.createElement('div');
-  etaDiv.className = 'eta-row';
-  etaDiv.setAttribute('data-route', card.route);
-
-  var eh = '';
+  // ETA row
+  var ed = document.createElement('div');
+  ed.className = 'eta-row';
+  ed.setAttribute('data-route', rt);
+  var chips = '';
   if (card.etas.length > 0) {
-    var lim = Math.min(card.etas = '';
-  th += '<div class="route-block">';
-.length, CONFIG.MAX_ETA_TIMES);
+    var lim = Math.min(card.etas.length, CONFIG.MAX_ETA_TIMES);
     for (var j = 0; j < lim; j++) {
       var m = card.etas[j];
-      var cc = 'cool';
-      if (m <= 2) cc = 'hot';
-      else if (m <= 8) cc = 'warm';
-      if (j > 0) eh += '<span class="sep">\u00b7</span>';
-      eh += '<span class="eta-chip ' + cc + '">' + m + t('minutes') + '</span>';
+      var cc = m <= 2 ? 'hot' : (m <= 8 ? 'warm' : 'cool');
+      if ( starred ? t('unstar') : t('star'));
+j > 0) chips += '<span class="sep">\u00b7</span>';
+      chips += '<span class="eta-chip ' + cc + '">' + m + t('minutes') + '</span>';
     }
   } else {
-    eh = '<span class="eta-chip na">' + t('noETA') + '</span>';
+    chips = '<span class="eta-chip na">' + t('noETA') + '</span>';
   }
-  etaDiv.innerHTML = '<span class="eta-label">' + t('eta') + '</span><div class="eta-vals">' + eh + '</div>';
-  el.appendChild(etaDiv);
+  ed.innerHTML = '<span class="eta-label">' + t('eta') + '</span><div class="eta-vals">' + chips + '</div>';
+  el.appendChild(ed);
 
+  // Gestures
   uiSetupStarGesture(el, sid, rt, op);
   return el;
 }
 
 function uiSetupStarGesture(el, stopId, route, op) {
-  var pressTimer = null;
+  var pt = null;
   el.addEventListener('touchstart', function() {
-    pressTimer = setTimeout(function() {
+    pt = setTimeout(function() {
       Stars.toggle(stopId, route, op);
       if (navigator.vibrate) navigator.vibrate(30);
     }, 600);
   }, { passive: true });
-  el.addEventListener('touchend', function() {
-    clearTimeout(pressTimer);
-  });
-  el.addEventListener('touchmove', function() {
-    clearTimeout(pressTimer);
-  });
+  el.addEventListener('touchend', function() { clearTimeout(pt); });
+  el.addEventListener('touchmove', function() { clearTimeout(pt); });
   el.addEventListener('dblclick', function(e) {
     if (e.target.closest('.star-btn')) return;
     Stars.toggle(stopId, route, op);
