@@ -1,16 +1,7 @@
 /* ═══════════════════════════════════════════════════
    eta.js — ETA fetching and data transformation
-   Responsibilities:
-     - Fetch ETA for a single stop
-     - Batch-fetch ETAs for multiple stops
-     - Group ETAs by route
-     - Calculate minutes until arrival
    ═══════════════════════════════════════════════════ */
 
-/**
- * Fetch ETA for one stop from the proxy.
- * Returns the raw ETA array from the API.
- */
 async function etaFetchOne(stopId) {
   try {
     const r = await fetch(`${CONFIG.ETA_PROXY}?stop_id=${encodeURIComponent(stopId)}`);
@@ -23,13 +14,30 @@ async function etaFetchOne(stopId) {
 }
 
 /**
- * Fetch ETAs for multiple stops in parallel.
- * Returns { [stopId]: rawEtaArray }
+ * Fetch ETAs for stops in the set.
+ * If limit is set, only fetch stops whose routes are within the first `limit` routes
+ * (stops are already sorted by distance; routes within each stop are sorted alphabetically).
  */
-async function etaFetchAll(stops) {
+async function etaFetchAll(stops, limit) {
   const results = {};
+  let routeCount = 0;
+  let stopsToFetch;
+
+  if (limit != null) {
+    stopsToFetch = [];
+    for (const s of stops) {
+      if (routeCount >= limit) break;
+      stopsToFetch.push(s);
+      // Estimate: assume each stop has ~4 routes (conservative)
+      // We fetch the stop and let the grouping decide the actual count
+      routeCount += 10; // fetch the stop, filtering happens in app.js
+    }
+  } else {
+    stopsToFetch = stops;
+  }
+
   const settled = await Promise.allSettled(
-    stops.map(async s => ({ id: s.id, eta: await etaFetchOne(s.id) }))
+    stopsToFetch.map(async s => ({ id: s.id, eta: await etaFetchOne(s.id) }))
   );
   for (const r of settled) {
     if (r.status === 'fulfilled') {
@@ -40,11 +48,21 @@ async function etaFetchAll(stops) {
 }
 
 /**
- * Parse a raw ETA array into grouped route data.
- * Returns an array of:
- *   { route, dest, op, etas: [minutes, ...] }
- * sorted by earliest ETA.
+ * Fetch ETAs only for specific stop IDs (used for starred refresh).
  */
+async function etaFetchForStops(stopIds) {
+  const results = {};
+  const settled = await Promise.allSettled(
+    [...stopIds].map(async id => ({ id, eta: await etaFetchOne(id) }))
+  );
+  for (const r of settled) {
+    if (r.status === 'fulfilled') {
+      results[r.value.id] = r.value.eta;
+    }
+  }
+  return results;
+}
+
 function etaGroupByRoute(rawETAs, fallbackOp) {
   const routeMap = {};
 
@@ -65,7 +83,6 @@ function etaGroupByRoute(rawETAs, fallbackOp) {
     }
   }
 
-  // Sort: routes with soonest first arrival at top
   return Object.values(routeMap).sort((a, b) => {
     const aMin = a.etas.length ? Math.min(...a.etas) : 9999;
     const bMin = b.etas.length ? Math.min(...b.etas) : 9999;
@@ -73,9 +90,6 @@ function etaGroupByRoute(rawETAs, fallbackOp) {
   });
 }
 
-/**
- * Classify an ETA minute value into a CSS class.
- */
 function etaClass(minutes) {
   if (minutes <= 2) return 'hot';
   if (minutes <= 8) return 'warm';

@@ -452,18 +452,20 @@ body {
 </head>
 <body>
 
-<a href="#card-list" class="skip">跳到巴士站列表</a>
+<a href="#card-list" class="skip" data-i18n="skipLink">跳到巴士站列表</a>
 
 <header class="top-bar" role="banner">
   <div class="app-title">
     <span class="live-dot" aria-hidden="true"></span>
-    巴士到站
+    <span data-i18n="appTitle">巴士到站</span>
   </div>
   <div class="top-actions">
+    <button class="btn" id="btnLang" aria-label="切換語言">EN</button>
     <button class="btn" id="btnTheme" aria-label="切換深色/淺色模式">◐</button>
-    <button class="btn" id="btnMap" aria-label="顯示地圖" aria-expanded="true">◎ 地圖</button>
+    <button class="btn" id="btnMap" aria-label="顯示地圖" aria-expanded="true">◎ <span data-i18n="map">地圖</span></button>
   </div>
 </header>
+
 
 <div class="map-wrap" id="mapWrap">
   <div id="map"></div>
@@ -471,12 +473,13 @@ body {
 
 <main class="content" id="card-list">
   <div class="section-head">
-    <span id="sectionLabel">附近巴士站</span>
+    <span id="sectionLabel" data-i18n="nearbyStops">附近巴士站</span>
     <span class="data-ts" id="dataTs"></span>
   </div>
   <div id="cardContainer">
     <div class="loading-msg" id="loadingMsg">
-      <div class="spinner"></div><br>正在載入資料...
+      <div class="spinner"></div><br>
+      <span data-i18n="loadingData">正在載入資料...</span>
     </div>
   </div>
 </main>
@@ -486,9 +489,9 @@ body {
 <footer class="footer" role="contentinfo">
   <div class="live-row">
     <span class="f-dot" aria-hidden="true"></span>
-    <span>每分鐘自動更新</span>
+    <span data-i18n="autoRefresh">每 15 秒自動更新</span>
   </div>
-  <div>資料來源：data.gov.hk</div>
+  <div data-i18n="dataSource">資料來源：data.gov.hk</div>
 </footer>
 
 </body>
