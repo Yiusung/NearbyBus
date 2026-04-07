@@ -18,7 +18,7 @@ function uiCacheDOM() {
 function uiShowLoading(msg) {
   if (!$loadingMsg) return;
   $loadingMsg.style.display = '';
-  $loadingMsg.innerHTML = `<div class="spinner"></div><br>${uiEsc(msg)}`;
+  $loadingMsg.innerHTML = '<div class="spinner"></div><br>' + uiEsc(msg);
 }
 
 function uiHideLoading() {
@@ -27,7 +27,7 @@ function uiHideLoading() {
 
 function uiShowError(msg) {
   $cardContainer.innerHTML =
-    `<div class="loading-msg" style="color:var(--eta-hot)">${uiEsc(msg)}</div>`;
+    '<div class="loading-msg" style="color:var(--eta-hot)">' + uiEsc(msg) + '</div>';
 }
 
 // ── Toast ─────────────────────────────────────────
@@ -59,61 +59,46 @@ function uiLoadLang() {
 function uiToggleLang() {
   const current = uiLoadLang();
   const next = current === 'tc' ? 'en' : 'tc';
-  localStorage.setItem('hkbus_lang', next);
-  uiApplyLang();
-}
-
-function uiApplyLang() {
-  // Update static elements by data-i18n attribute
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
+  localStorage.setItem('hkbusApplyLang() {
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    var key = el.getAttribute('data-i18n');
     el.textContent = t(key);
   });
 
-  // Update lang button label
-  const btn = document.getElementById('btnLang');
+  var btn = document.getElementById('btnLang');
   if (btn) btn.textContent = uiLoadLang() === 'tc' ? 'EN' : '中';
 
-  // Update skip link
-  const skip = document.querySelector('.skip');
+  var skip = document.querySelector('.skip');
   if (skip) skip.textContent = t('skipLink');
 
-  // Update aria-labels
-  const btnTheme = document.getElementById('btnTheme');
+  var btnTheme = document.getElementById('btnTheme');
   if (btnTheme) btnTheme.setAttribute('aria-label', t('themeLabel'));
 
-  const btnMap = document.getElementById('btnMap');
+  var btnMap = document.getElementById('btnMap');
   if (btnMap) btnMap.setAttribute('aria-label', t('mapLabel'));
 
-  // Re-render cards if data exists
   if (typeof AppRefresh === 'function') AppRefresh();
 }
 
 // ── Map Toggle ────────────────────────────────────
-let mapVisible = true;
-let autoHidden = false;
+var mapVisible = true;
+var autoHidden = false;
 
 function uiToggleMap() {
   mapVisible = !mapVisible;
   $mapWrap.classList.toggle('collapsed', !mapVisible);
-  const mapText = document.querySelector('[data-i18n="map"]');
-  $btnMap.textContent = '◎ ';
-  if (mapText) {
-    $btnMap.appendChild(mapText);
-  } else {
-    $btnMap.textContent = mapVisible ? '◎ ' + t('map') : '◎ ' + t('showMap');
-  }
+  $btnMap.textContent = mapVisible ? '\u25ce ' + t('map') : '\u25ce ' + t('showMap');
   $btnMap.setAttribute('aria-expanded', mapVisible);
   if (mapVisible) mapInvalidateSize();
 }
 
 function uiInitScrollHide() {
-  window.addEventListener('scroll', () => {
+  window.addEventListener('scroll', function() {
     if (!autoHidden && window.scrollY > 80 && mapVisible) {
       autoHidden = true;
       mapVisible = false;
       $mapWrap.classList.add('collapsed');
-      $btnMap.textContent = '◎ ' + t('showMap');
+      $btnMap.textContent = '\u25ce ' + t('showMap');
       $btnMap.setAttribute('aria-expanded', 'false');
     }
   }, { passive: true });
@@ -121,50 +106,26 @@ function uiInitScrollHide() {
 
 // ── Section Label + Timestamp ─────────────────────
 function uiUpdateSectionLabel(stopCount, cardCount) {
-  $sectionLabel.textContent = `${stopCount} ${t('stops')} · ${cardCount} ${t('routes')}`;
+  $sectionLabel.textContent = stopCount + ' ' + t('stops') + ' \u00b7 ' + cardCount + ' ' + t('routes');
 }
 
 function uiUpdateTimestamp(ts) {
   if (ts) {
-    $dataTs.textContent.op = (card.op || '').toLowerCase();
-
-  const el = document.createElement('article');
-  el.className = [
-    'eta-card',
-    card.op,
-    card.isStarred ? 'starred' : '',
-    card.isTooFar ? 'too-far' : '',
-  ].filter(Boolean).join(' ');
-  el.dataset.stopId = card.stopId;
-  el.dataset.route = card.route;
-  el.setAttribute('aria-label', `路線 ${card.route}，${card.dest}，${card.stopNameTc}`);
-
-  // Star button
-  const starBtn = document.createElement('button');
-  starBtn.className = `star-btn ${card.op}${card.isStarred ? ' active' : ''}`;
-  starBtn.textContent = card.isStarred ? '★' : '☆';
-  starBtn.setAttribute('aria-label', card.isStarred ? t('unstar') : t('star'));
-  starBtn.addEventListener('click', e => {
-    e.stopPropagation();
-    Stars.toggle(card.stopId, card.route, card.op);
-  });
-  el.appendChild(starBtn);
-
-  // Card top: route + operator + destination
-  const cardTop = document.createElement('div');
-  cardTop.className = 'card-top';
-  cardTop.innerHTML = `
-    <div = t('dataLabel') + ': ' + new Date(ts).toLocaleDateString('zh-HK');
+    $dataTs.textContent = t('dataLabel') + ': ' + new Date(ts).toLocaleDateString('zh-HK');
   }
 }
 
 // ── Render ETA Cards ──────────────────────────────
 function uiRenderCards(cards) {
   $cardContainer.innerHTML = '';
+  var prevStopId = null;
 
-  let prevStopId = null;
+  for (var i = 0; i < cards.length; i++) {
+    var card_lang', next);
+  uiApplyLang();
+}
 
-  for (const card of cards) {
+function ui = cards[i];
     if (card.stopId !== prevStopId) {
       $cardContainer.appendChild(uiBuildStopSeparator(card));
       prevStopId = card.stopId;
@@ -174,69 +135,98 @@ function uiRenderCards(cards) {
 }
 
 function uiBuildStopSeparator(card) {
-  const div = document.createElement('div');
+  var div = document.createElement('div');
   div.className = 'stop-separator';
-  const lang = uiLoadLang();
-  const primaryName = lang === 'en' ? card.stopNameEn : card.stopNameTc;
-  const secondaryName = lang === 'en' ? card.stopNameTc : card.stopNameEn;
-  div.innerHTML = `
-    <span class="stop-sep-name">
-      ${uiEsc(primaryName)}
-      <span style="opacity:0.5;font-size:0.65rem">${uiEsc(secondaryName)}</span>
-    </span>
-    <span class="stop-sep-dist">${geoFormatDistance(card.dist)}</span>`;
+  var lang = uiLoadLang();
+  var primaryName = lang === 'en' ? card.stopNameEn : card.stopNameTc;
+  var secondaryName = lang === 'en' ? card.stopNameTc : card.stopNameEn;
+
+  var html = '<span class="stop-sep-name">' + uiEsc(primaryName);
+  html += ' <span style="opacity:0.5;font-size:0.65rem">' + uiEsc(secondaryName) + '</span></span>';
+  html += '<span class="stop-sep-dist">' + geoFormatDistance(card.dist) + '</span>';
+  div.innerHTML = html;
   return div;
 }
 
 function uiBuildCard(card) {
-  card class="route-block">
-      <span class="route-num">${uiEsc(card.route)}</span>
-      <span class="op-badge ${card.op}">${CONFIG.OP_LABEL[card.op] || card.op}</span>
-    </div>
-    <span class="destination">${uiEsc(card.dest)}</span>`;
+  card.op = (card.op || '').toLowerCase();
+
+  var el = document.createElement('article');
+  var classes = ['eta-card', card.op];
+  if (card.isStarred) classes.push('starred');
+  if (card.isTooFar) classes.push('too-far');
+  el.className = classes.join(' ');
+  el.dataset.stopId = card.stopId;
+  el.dataset.route = card.route;
+  el.setAttribute('aria-label', '\u8def\u7dda ' + card.route + '\uff0c' + card.dest + '\uff0c' + card.stopNameTc);
+
+  // Star button
+  var starBtn = document.createElement('button');
+  starBtn.className = 'star-btn ' + card.op + (card.isStarred ? ' active' : '');
+  starBtn.textContent = card.isStarred ? '\u2605' : '\u2606';
+  starBtn.setAttribute('aria-label', card.isStarred ? t('unstar') : t('star'));
+  (function(sid, rt, op) {
+    starBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      Stars.toggle(sid, rt, op);
+    });
+  })(card.stopId, card.route, card.op);
+  el.appendChild(starBtn);
+
+  // Card top
+  var cardTop = document.createElement('div');
+  cardTop.className = 'card-top';
+  var topHTML = '<div class="route-block">';
+  topHTML += '<span class="route-num">' + uiEsc(card.route) + '</span>';
+  topHTML += '<span class="op-badge ' + card.op + '">' + (CONFIG.OP_LABEL[card.op] || card.op) + '</span>';
+  topHTML += '</div>';
+  topHTML += '<span class="destination">' + uiEsc(card.dest) + '</span>';
+  cardTop.innerHTML = topHTML;
   el.appendChild(cardTop);
 
-  // ETA chips — container identified by data-route for refresh updates
-  const etaRow = document.createElement('div');
+  // ETA row
+  var etaRow = document.createElement('div');
   etaRow.className = 'eta-row';
   etaRow.dataset.route = card.route;
 
-  let etaHTML;
+  var etaHTML;
   if (card.etas.length > 0) {
-    etaHTML = card.etas.slice(0, CONFIG.MAX_ETA_TIMES).map((m, i) => {
-      const cls = m <= 2 ? 'hot' : m <= 8 ? 'warm' : 'cool';
-      const sep = i > 0 ? '<span class="sep">·</span>' : '';
-      return `${sep}<span class="eta-chip ${cls}">${m}${t('minutes')}</span>`;
-    }).join('');
+    var parts = [];
+    var limit = Math.min(card.etas.length, CONFIG.MAX_ETA_TIMES);
+    for (var j = 0; j < limit; j++) {
+      var m = card.etas[j];
+      var cls = m <= 2 ? 'hot' : m <= 8 ? 'warm' : 'cool';
+      if (j > 0) parts.push('<span class="sep">\u00b7</span>');
+      parts.push('<span class="eta-chip ' + cls + '">' + m + t('minutes') + '</span>');
+    }
+    etaHTML = parts.join('');
   } else {
-    etaHTML = `<span class="eta-chip na">${t('noETA')}</span>`;
+    etaHTML = '<span class="eta-chip na">' + t('noETA') + '</span>';
   }
 
-  etaRow.innerHTML = `
-    <span class="eta-label">${t('eta')}</span>
-    <div class="eta-vals">${etaHTML}</div>`;
+  etaRow.innerHTML = '<span class="eta-label">' + t('eta') + '</span><div class="eta-vals">' + etaHTML + '</div>';
   el.appendChild(etaRow);
 
-  // Long-press / double-click
+  // Gestures
   uiSetupStarGesture(el, card.stopId, card.route, card.op);
 
   return el;
 }
 
 function uiSetupStarGesture(el, stopId, route, op) {
-  let pressTimer = null;
+  var pressTimer = null;
 
-  el.addEventListener('touchstart', () => {
-    pressTimer = setTimeout(() => {
+  el.addEventListener('touchstart', function() {
+    pressTimer = setTimeout(function() {
       Stars.toggle(stopId, route, op);
-      navigator.vibrate?.(30);
+      if (navigator.vibrate) navigator.vibrate(30);
     }, 600);
   }, { passive: true });
 
-  el.addEventListener('touchend', () => clearTimeout(pressTimer));
-  el.addEventListener('touchmove', () => clearTimeout(pressTimer));
+  el); });
+  el.addEventListener('touchmove', function() { clearTimeout(pressTimer); });
 
-  el.addEventListener('dblclick', e => {
+  el.addEventListener('dblclick', function(e) {
     if (e.target.closest('.star-btn')) return;
     Stars.toggle(stopId, route, op);
   });
@@ -245,7 +235,7 @@ function uiSetupStarGesture(el, stopId, route, op) {
 // ── Helpers ───────────────────────────────────────
 function uiEsc(s) {
   if (!s) return '';
-  const d = document.createElement('div');
+  var d = document.createElement('div');
   d.textContent = s;
   return d.innerHTML;
 }
